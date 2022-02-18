@@ -1,11 +1,14 @@
 version: "3.7"
 services:
-  bot:
+  dev-bot:
     build: .
     image: efp-bot:latest_dev
     container_name: dev-efp
     volumes:
     - ./src:/src
+    environment:
+    - token=${token}
+    - clientId=${clientId}
       #entrypoint: /bin/bash
     restart: unless-stopped
 

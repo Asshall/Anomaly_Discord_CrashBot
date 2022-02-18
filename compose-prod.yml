@@ -3,7 +3,7 @@ services:
   bot:
     build: .
     image: efp-bot
-    container_name: dev-efp
+    container_name: prod-efp
     restart: unless-stopped
 
 
