@@ -1,0 +1,9 @@
+version: "3.7"
+services:
+  bot:
+    build: .
+    image: efp-bot
+    container_name: dev-efp
+    restart: unless-stopped
+
+
