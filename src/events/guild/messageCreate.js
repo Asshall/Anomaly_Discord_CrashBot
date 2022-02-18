@@ -20,7 +20,7 @@ module.exports = async (message, bot) => {
 				
   // For logs
   const file = message.attachments.first();
-  if (!file || !file.name.includes(".log")) return;
+  if (!file || !nconf.get("logExtensions").includes(file.name.substr(file.name.lastIndexOf('.')+1))) return;
   try {
     const response = await fetch(file.url);
     if (!response.ok)
