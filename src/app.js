@@ -17,7 +17,11 @@ const nconf = require('nconf');
 nconf.argv()
 		.env()
 		.file({ file: 'config.json' });
-const Token = nconf.get('token')
+nconf.defaults({
+  "crash-reply": "So..."
+});
+
+const Token = nconf.get('token');
 client.login(Token);
 
 ["event_handler"].forEach(handlers => {
