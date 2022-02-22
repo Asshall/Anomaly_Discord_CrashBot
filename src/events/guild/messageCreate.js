@@ -30,12 +30,8 @@ module.exports = async (message, bot) => {
       );
     const text = await response.text();
     if (text) {
-	  // For full logs
-      if(text.includes("FATAL ERROR")){
-        require(`../.././logtypes/crash.js`)(bot, text, message);
-      }else {
-        require(`../.././logtypes/notcrash.js`)(bot, text, message);
-      }
+	  let { genMessage } = require(`../../logtypes/crash.js`)
+	  genMessage(bot, text, message);
     }
   } catch (error) {
     console.log(error);
