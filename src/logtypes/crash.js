@@ -154,11 +154,19 @@ function trunkIfNeeded(v){
 }
 
 function addUnique(arr, el){
-	if (arr === undefined) { arr = [] }
-	if (!arr.includes(el)) {
-		arr.push(el)
+  if (arr === undefined) { arr = [] }
+  let isPresent = false
+  for (let i = arr.length-1; i >= 0; i--) {
+	if (arr[i].value !== undefined &&
+	  el.value !== undefined &&
+	  arr[i].value.toString() == el.value.toString()){
+	  isPresent = true
 	}
-	return arr
+  }
+  if (!isPresent) {
+	arr.push(el)
+  }
+  return arr
 }
 
 function parsingException(message) {

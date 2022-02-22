@@ -1,5 +1,5 @@
 const moo = require("moo")
-const vScripts = require("./vanillaScripts.js")
+const { vScripts, efpScripts } = require("./vanillaScripts.js")
 
 // This needs refactoring so hard, all theses backslashes make the regex unreadable
 const errPre = "^! ?";
@@ -54,7 +54,7 @@ let mainState = {
   },
   Warning: {
 	match: new RegExp(`${errPre}(?:Missing|Invalid).*`),
-	value: x => x.replace(new RegExp(`${errPre}|${repIden}`),''),
+	value: x => x.replace(new RegExp(errPre), '').replace(new RegExp(repIden), ''),
   },
   LUAStack: {
 	match: new RegExp(`${luaPre} (?: 0 : \\[C  \\] execute|SCRIPT RUNTIME ERROR)`),
@@ -62,7 +62,7 @@ let mainState = {
   },
   LUAError: {
 	match: new RegExp(`${luaPre} .*`),
-	value: x => baseName(x.replace(new RegExp(`${errPre}|${repIden}`), '')),
+	value: x => baseName(x.replace(new RegExp(errPre), '').replace(new RegExp(repIden), '')),
   },
   EngineError: {
 	match: new RegExp(`${errPre}ERROR:?`),
@@ -70,7 +70,7 @@ let mainState = {
   },
   ModelError: {
 	match: new RegExp(`${errPre}error.*`),
-	value: x => x.replace(new RegExp(`${errPre}|${repIden}`),''),
+	value: x => baseName(x.replace(new RegExp(errPre), '').replace(new RegExp(repIden), '')),
   },
   Traceback: {
 	match: new RegExp(traceIden),
@@ -166,7 +166,7 @@ let grammar = {
   ModelError : {pdefault: "Couldn't parse this model error"},
   LUAError: {pdefault: "Couldn't parse this lua error"},
   // This needs to be more efficient...
-  Script : {"precond" :s => !vScripts.includes(s.toLowerCase()), "pdefault": "No non-vanilla scripts"},
+  Script : {"precond" : s => !([vScripts, efpScripts].flat().includes(s.toLowerCase())), "pdefault": "No non-vanilla scripts"},
   Fatal : {pdefault: "Couldn't parse the fatal error", functor: l => {
 	  let bufferFatal = itrUntil(l, "EOF", "Newline")
 	  let fatal = []
@@ -234,15 +234,7 @@ let grammar = {
 // const fs = require("fs")
 // let file = fs.readFileSync("xray__1.log", "utf8")
 // lexer.reset(file)
-// lexer.reset(`~ ------------------------------------------------------------------------
-// ~ STACK TRACEBACK:
-//  
-//     e:/gry/anomaly\\gamedata\\scripts\\axr_main.script (line: 229) in function 'callback_set'
-//     e:/gry/anomaly\\gamedata\\scripts\\_g.script (line: 105) in function 'RegisterScriptCallback'
-//     e:/gry/anomaly\\gamedata\\scripts\\zzz_player_injuries.script (line: 1760) in function 'on_game_start'
-//     e:/gry/anomaly\\gamedata\\scripts\\axr_main.script (line: 292) in function 'on_game_start'
-//     e:/gry/anomaly\\gamedata\\scripts\\_g.script (line: 83) in function <e:/gry/anomaly\\gamedata\\scripts\\_g.script:74>
-// ~ ------------------------------------------------------------------------!`)
+// lexer.reset(`! error in stalker with visual actors\\stalker_neutral\\stalker_neutral_a.ogf [44]`)
 // for (let t of lexer){ if(true
 //   // t.type != "LexError"
 // ) {console.log(t)}}

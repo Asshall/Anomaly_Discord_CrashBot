@@ -12,7 +12,7 @@ const headers = {
   LUAError: "Lua errors",
   EngineError: "Engine errors",
   ModelError: "Model errors",
-  Script: "Non-vanilla loaded scripts",
+  Script: "Non-eft-vanilla loaded scripts",
   Warning: "Warnings",
 }
 function decorateTrace(trace){
