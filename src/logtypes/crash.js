@@ -3,21 +3,19 @@ const JSP = require("jspaste");
 const { vanillaPaste, decorateTrace }  = require("../pastes/efp-vanilla.js");
 const nconf = require("nconf");
 let { lexer, grammar } = require("../lexers/efp-logs.js")
-let fallbacks = ["Traceback", "EngineError", "LUAError"] //nconf.get("priolist")
-const sendMessageAsResponse = false // Should the user get pinged
-const errorMessage = "Welp this happened :"
-const vanillaBuild = "build 8028";
-const trunkIden = "..."
-const discordMaxLength = Math.pow(2, 10) + trunkIden.length // 1024 + 4
-const phoneMaxLength = Math.pow(2,9) // This is to keep the readability on phones
+const fallbacks = nconf.get("fallbacks")
+const messageAsResponse = nconf.get("messageAsResponse")
+const errorMessage = nconf.get("errorMessage")
+const vanillaBuild = nconf.get("vanillaBuild")
+const trunkIden = nconf.get("trunkIden") + '\n'
+const discordMaxLength =  nconf.get("discordMaxLength")
+const phoneMaxLength = nconf.get("phoneMaxLength") // This is to keep the readability on phones
+const maxLength = trunkIden.length + discordMaxLength + phoneMaxLength
 // Defaulting for system details
-const systemDetailsDefaults = {
-  CPU		: "No CPU info",
-  GPU		: "No GPU info",
-  Build		: "No build info",
-  Dx		: "No DirectX info",
-}
-const noProbCauseLines = 5
+const systemDetailsDefaults = nconf.get("systemDetailsDefaults")
+/* Number of lines from the end of the log to display if
+  fatal error is null and no other cause is found */
+const noProbCauseLines = nconf.get("noProbCauseLines")
 
 // For testing purposes
 // const fs = require("fs")
@@ -126,7 +124,7 @@ async function genMessage (client, text, message) {
 	  embed.addFields(new Object(pasteUrl))
 
 	  let msg = { content: nconf.get("crash-reply"), embeds: [embed] }
-	  if (sendMessageAsResponse) {
+	  if (messageAsResponse) {
 		message.reply(msg)
 	  } else {
 		message.channel.send(msg)
@@ -134,7 +132,7 @@ async function genMessage (client, text, message) {
 	} catch(e) {
 	  console.error(e)
 	  let msg = { content: `${errorMessage}\n` + e}
-	  if (sendMessageAsResponse) {
+	  if (messageAsResponse) {
 		message.reply(msg)
 	  } else {
 		message.channel.send(msg)

@@ -1,3 +1,19 @@
 {
-  "logExtensions": ["txt", "log"]
+  "logExtensions": ["txt", "log"],
+  "crash-reply": "So...",
+  "fallbacks": ["Traceback", "EngineError", "LUAError"],
+  "messageAsResponse": false,
+  "errorMessage": "Welp this happened :",
+  "vanillaBuild": "build 8028",
+  "trunkIden": "...",
+  "discordMaxLength": 1024,
+  "phoneMaxLength": 512,
+  "systemDetailsDefaults" :{
+	"CPU"		: "No CPU info",
+	"GPU"		: "No GPU info",
+	"Build"		: "No build info",
+	"Dx"		: "No DirectX info"
+  },
+  "noProbCauseLines" : 5
+
 }
