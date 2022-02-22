@@ -13,10 +13,13 @@ const Discord = require('discord.js'),
 
 const keepAlive = require('./server.js');
 
+// Configs
 const nconf = require('nconf');
+nconf.env()
+  .file({ file: 'secret.json' });
 nconf.argv()
-		.env()
-		.file({ file: 'config.json' });
+  .env()
+  .file({ file: 'config.json' });
 nconf.defaults({
   "crash-reply": "So..."
 });
