@@ -3,8 +3,8 @@ const JSP = require("jspaste");
 const { vanillaPaste, decorateTrace }  = require("../pastes/efp-vanilla.js");
 const nconf = require("nconf");
 let { lexer, grammar } = require("../lexers/efp-logs.js")
+const { getReportButton } = require("../utils.js")
 const fallbacks = nconf.get("fallbacks")
-const messageAsResponse = nconf.get("messageAsResponse")
 const errorMessage = nconf.get("errorMessage")
 const vanillaBuild = nconf.get("vanillaBuild")
 const trunkIden = nconf.get("trunkIden") + '\n'
@@ -31,10 +31,9 @@ const noProbCauseLines = nconf.get("noProbCauseLines")
 //   }
 // })
 
-async function genMessage (client, text, message) {
+async function genMessage (text, err) {
   try {
 	let data = parseCrashlog(text);
-
 	for (let k of Object.keys(systemDetailsDefaults)){
 	  data[k] = getLast(data[k]) // Getting the last element of the array
 	  // Defaulting undefined values
@@ -111,7 +110,7 @@ async function genMessage (client, text, message) {
 	const embed = new Discord.MessageEmbed()
 	  .setColor('#0099ff')
 	  .setTitle("Crash report")
-	  .setFooter({ text: "This is a beta version of gimmelogs. Dm it logs that break it\nCode lives here: https://github.com/Asshall/Anomaly_Discord_CrashBot"})
+	  .setFooter({ text: "This is a beta version of gimmelogs\nCode lives here: https://github.com/Asshall/Anomaly_Discord_CrashBot"})
 	  .addFields(
 		new Object(hardware),
 		new Object(build),
@@ -123,20 +122,11 @@ async function genMessage (client, text, message) {
 	  }
 	  embed.addFields(new Object(pasteUrl))
 
-	  let msg = { content: nconf.get("crash-reply"), embeds: [embed] }
-	  if (messageAsResponse) {
-		message.reply(msg)
-	  } else {
-		message.channel.send(msg)
-	  }
+	  return { content: nconf.get("crash-reply"), embeds: [embed], components: [getReportButton()]}
 	} catch(e) {
-	  console.error(e)
-	  let msg = { content: `${errorMessage}\n` + e}
-	  if (messageAsResponse) {
-		message.reply(msg)
-	  } else {
-		message.channel.send(msg)
-	  }
+	  if (err)
+		return e
+	  return { content: nconf.get("genErrorMessage"), components: [getReportButton()]}
 	}
 }
 
@@ -173,7 +163,7 @@ function parsingException(message) {
   this.message = message
 }
 parsingException.prototype.toString = function() {
-  return `parsing error: ${this.message}`
+  return `parsing error:\n${this.message}`
 }
 
 function parseCrashlog(crashlog) {
@@ -199,7 +189,7 @@ function parseCrashlog(crashlog) {
 		})
 	  }
 	} catch (e) {
-	  throw new parsingException(`This token caused the following error ${token}, => ${e}`)
+	  throw new parsingException(`This token caused the following error ${token} =>\n${e}`)
 	}
   }
 // console.log(ret)

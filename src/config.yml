@@ -1,0 +1,29 @@
+logExtensions: [txt, log] # The extension to consider as log files
+crash-reply: So... # The text in a sucessful bot response
+messageAsResponse: true # Should the bot reply or just send a message
+vanillaBuild: "build 8028" # What is considered the vanilla build
+trunkIden: ... # Character do be displayed when a field in the response embed is too long
+phoneMaxLength: 512 # This is the max size of a embed field (usefull when displayed on phones). It overrides the discord default max length
+systemDetailsDefaults: # Defaults
+  CPU: No CPU info
+  GPU: No GPU info
+  Build: No build info
+  Dx: No DirectX info
+# When no fatal error is found in a log, the bot will try to find the last tokens from this list
+fallbacks:
+- Traceback
+- EngineError
+- LUAError
+noProbCauseLines: 5 #If no fallback token are found how many line from the end of the log to display
+genErrorMessage: "Something wrong happened... Did you put black magic in that log ?" # When the response generation fails
+fetchErrMessage: "Couldn't get this log because:" # Error to display when an attachement can't be downloaded
+# When reporting the original message is fetched in order to get back the attachment, this is displayed if it failed to fetch
+reportFailFetch: Couldn't find the log, it has to be in the @ last messages and have a log attached to it
+reportConfirmMsg: Your log have been reported sucessfully
+reportErrorMsg: Wow, something happened... Your log wasn't reported
+reportMsg: This log broke me, fix me cunt # Message content when a log a sent on the report channel
+reportButtonClicked: This log has been reported # Text to be displayed on a clicked report button
+reportButtonText: Report a broken response # Text on the report button
+fetchDepthLimit: 10
+noAdvertiseCommands:
+- report
