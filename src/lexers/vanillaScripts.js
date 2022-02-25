@@ -413,8 +413,8 @@ let vScripts = [
   "xr_wounded.script",
   "xr_zones.script",
   "xr_zones_sound.script",
-]
-let efpScripts = [
+// ]
+// let efpScripts = [
   "gameplay_disguise.script",
   "ui_inventory.script",
   "xr_meet.script",
@@ -1041,4 +1041,5 @@ let efpScripts = [
   "zzzz_arti_jamming_repairs.script.script",
   "zzzzz_arti_outfit_repair.script.script",
 ]
-module.exports = { vScripts, efpScripts }
+// Efp scripts are concatonated inside vanillascripts line 416
+module.exports = { vScripts }

@@ -21,6 +21,6 @@
   "reportFailFetch": "Couldn\\'t find your log, it has to be in the @ last messages and have a log attached to it",
   "reportConfirmMsg": "Your log have been reported sucessfully",
   "reportErrorMsg": "Wow, something happened... Your log wasn't reported",
-  "reportMsg": "This log broke me, fix me cunt",
+  "reportMsg": "reported this log:",
   "reportButtonClicked": "This log has been reported"
 }

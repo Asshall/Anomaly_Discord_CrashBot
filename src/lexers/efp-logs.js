@@ -1,5 +1,5 @@
 const moo = require("moo")
-const { vScripts, efpScripts } = require("./vanillaScripts.js")
+const { vScripts } = require("./vanillaScripts.js")
 
 // This needs refactoring so hard, all theses backslashes make the regex unreadable
 const errPre = "^! ?";
@@ -7,15 +7,14 @@ const luaPre = `${errPre}\\\[LUA\\\]`
 const repIden = " \\[\\d+\\]" // For repeated message, in the logs they appear like "msg [number]"
 const nl = "\r\n"; // Windows carriage return before newline... Cause windows is "different"
 const traceIden = "~ -{72}"
-
 // c:\path!/aha-you_mad.script or ... script.name or ...script.name or ..\script.name
 const path = "(?:[a-z]:|\\\.{2,3} ?)(?:\\\\|\\/)?(?:[\\d\\w.! -]+[\\/\\\\]?)+" /* Fucken windows path */
-function baseName(p){
-  if (p.match(path)){
-	s = p.split(/\/|\\/)
-	return s[s.length-1].replace(/\.{3}/, '').trim()
-  }
-  return p
+
+const baseName = function(p){
+  !p.match(path) ?? (p => { return p })();
+
+  s = p.split(/\/|\\/);
+  return s[s.length-1].replace(/\.{3}/, '').trim();
 }
 const linenum = {
   match: /(?:\(line:|[:\(]) ?\d+\)?/,
@@ -27,9 +26,9 @@ const errorToken = {
   error: true,
 }
 
-let mainState = {
+const mainState = {
   /* Would need to tokenize depending on the brand's
-  naming convention... Not gonna do that */
+	 cpu naming convention... Not gonna do that */
   CPU: {
 	match: /\* Detected CPU.*/,
 	value: x => x.split(/:|APU|CPU|Processor|with/)[2],
@@ -144,20 +143,20 @@ lexer = moo.states({
   }
 })
 
-function itrUntil(lexer, token, skip){
-  if (token === undefined){return}
-  let next = lexer.next()
-  let ret = []
-  let ignores = ["LexError", "Ignore", skip].flat()
-  while (next !== undefined && next.type !== token) {
-	if (ignores.includes(next.type)){next = lexer.next();continue}
-	ret.push(next)
-	next = lexer.next()
+const itrUntil = function(lexer, token, skip){
+  if (!token) return;
+  const ignores = ["LexError", "Ignore", skip].flat();
+  let next = lexer.next();
+  let ret = [];
+  while (next && next.type !== token) {
+	if (ignores.includes(next.type)){next = lexer.next();continue;}
+	ret.push(next);
+	next = lexer.next();
   }
-  return ret
+  return ret;
 }
 
-let grammar = {
+const grammar = {
   CPU : {pdefault: "Couldn't parse the cpu info"},
   GPU : {pdefault: "Couldn't parse the gpu info"},
   Build : {pdefault: "Couldn't parse build info"},
@@ -166,54 +165,60 @@ let grammar = {
   ModelError : {pdefault: "Couldn't parse this model error"},
   LUAError: {pdefault: "Couldn't parse this lua error"},
   // This needs to be more efficient...
-  Script : {"precond" : s => !([vScripts, efpScripts].flat().includes(s.toLowerCase())), "pdefault": "No non-vanilla scripts"},
+  Script : {"pdefault": "No non-vanilla scripts", "precond" : s => !vScripts.includes(s.toLowerCase())},
   Fatal : {pdefault: "Couldn't parse the fatal error", functor: l => {
-	  let bufferFatal = itrUntil(l, "EOF", "Newline")
-	  let fatal = []
+
+	  const bufferFatal = itrUntil(l, "EOF", "Newline");
+	  let fatal = [];
 	  for (let i=1; i < bufferFatal.length; i+=2){
-		fatal[bufferFatal[i-1].value] = bufferFatal[i].value
+		fatal[bufferFatal[i-1].value] = bufferFatal[i].value;
 	  }
 	  if (fatal.Function == "CScriptEngine::lua_error") {
-		args = 'Arguments' in fatal ? baseName(fatal.Arguments).split(":") : []
-		return `LUA Error: \"${args[2].trim()}\" in file ${args[0].trim()} line ${args[1].trim()}`
+		args = baseName(fatal?.Arguments) ?? (() => { throw new Error("Fatal lua error arguments couldn't be parsed") })();
+		// Not always the same format...
+		// return `LUA Error: \"${args[2].trim()}\" in file ${args[0].trim()} line ${args[1].trim()}`;
+		return args
 	  }
-	  return `${fatal.Function} : ${fatal.Expression} in file ${fatal.File} (${fatal.Line})\n${fatal.Description}`
+	  return `${fatal.Function} : ${fatal.Expression} in file ${fatal.File} (${fatal.Line})\nDescription: ${fatal.Description}`;
 	}
   },
   EngineError: {pdefault : "Couldn't parse this engine error", functor: l => {
-	  let bufferEngine = itrUntil(l, "Newline", "WS")
-	  let desc = bufferEngine[0]
-	  let fun = bufferEngine[1]
-	  if (fun === undefined) {
-		return desc
-	  } else {
-		return `${bufferEngine[1].value} in ${bufferEngine[0].value}`
-	  }
-	}},
+
+	  const  bufferEngine = itrUntil(l, "Newline", "WS");
+	  const desc = bufferEngine[0];
+	  const fun = bufferEngine[1];
+	  !fun && (() => {return desc})();
+	  return `${bufferEngine[1].value} in ${bufferEngine[0].value}`
+	}
+  },
   Traceback: {pdefault: "Couldn't parse this stack trace", functor: l => {
-	  let bufferStack = itrUntil(l,"EOT", "WS")
-	  let stack = []
-	  let tokPerObj = 3
-	  // maybe have a modulo op to check for missing tokens
-	  for (let i=2; i < bufferStack.length; i+=3){
+
+	  const bufferStack = itrUntil(l,"EOT", "WS");
+	  let stack = [];
+	  const tokPerObj = 3;
+
+	  // This check will not always work... If the traceback is missing enough tokens, the length could still be a multiple of 3
+	  (bufferStack.length % tokPerObj != 0) && (() => { throw new Error("Traceback has missing tokens")})();
+	  for (let i=2; i < bufferStack.length; i+=tokPerObj){
 		stack.push({
 		  file: bufferStack[i-2].value,
 		  line: bufferStack[i-1].value,
 		  func: bufferStack[i].value
 		})
 	  }
-	  let ret = []
+	  let ret = [];
 	  for (let i of stack){
-		i.func = i.func.match(/\d+/) ? `line ${i.func}` : `function ${i.func}`
-		ret.push(`File ${i.file} line ${i.line} in ${i.func}`)
+		i.func = i.func.match(/\d+/) ? `line ${i.func}` : `function ${i.func}`;
+		ret.push(`File ${i.file} line ${i.line} in ${i.func}`);
 	  }
-	  return ret
+	  return ret;
   }},
   LUAStack: {pdefault: "Couldn't parse this lua stack trace", functor: l => {
-	let bufferLua = itrUntil(l, "EOL",  ["Pre", "Level"])
-	let stack = []
-	let tokPerObj = 3
-	// maybe have a modulo op to check for missing tokens
+	const bufferLua = itrUntil(l, "EOL",  ["Pre", "Level"]);
+	let stack = [];
+	const tokPerObj = 3;
+
+	(bufferLua.length % tokPerObj != 0) && (() => { throw new Error("Traceback has missing tokens")})();
 	for (let i=0; i < bufferLua.length; i+=tokPerObj){
 	  stack.push({
 		file: bufferLua[i],
@@ -221,21 +226,21 @@ let grammar = {
 		desc: bufferLua[i+2]
 	  })
 	}
-	let ret = []
+	let ret = [];
 	for (let i of stack){
-	  i.desc = i.desc == "" ? "No description" : i.desc
+	  i.desc = i.desc == "" ? "No description" : i.desc;
 
-	  ret.push(`File ${i.file} line ${i.line} : ${i.desc}`)
+	  ret.push(`File ${i.file} line ${i.line} : ${i.desc}`);
 	}
-	return ret
+	return ret;
   }},
 }
 // For testing purposes
 // const fs = require("fs")
-// let file = fs.readFileSync("xray__1.log", "utf8")
+// let file = fs.readFileSync("xray_sky.log", "utf8")
 // lexer.reset(file)
 // lexer.reset(`! error in stalker with visual actors\\stalker_neutral\\stalker_neutral_a.ogf [44]`)
 // for (let t of lexer){ if(true
-//   // t.type != "LexError"
+  // t.type != "LexError"
 // ) {console.log(t)}}
 module.exports = { lexer, grammar }
