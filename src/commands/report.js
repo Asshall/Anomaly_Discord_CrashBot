@@ -7,7 +7,7 @@ const nconf = require("nconf");
 module.exports = {
   data: new SlashCommandBuilder()
 	.setName("report")
-	.setDescription("Report a log that broke me"),
+	.setDescription(nconf.get("reportCmdDesc")),
   async execute(interaction) {
 	/* If the bot response is an actual response you can actually report a bug for the person who actually send the first log */
 	const user = nconf.get("messageAsResponse") ? interaction.message.mentions.repliedUser : interaction.user;

@@ -1,20 +1,7 @@
-const sysHeader = "--------[ Your system specifications ]--------"
-const headers = {
-  systemDetails : {
-	CPU: "CPU",
-	GPU: "GPU",
-	Build: "Build",
-	Dx: "Dx version"
-  },
-  Fatal: "Fatal error",
-  LUAStack: "Lua fatal traceback",
-  Traceback: "Lua non fatal tracebacks",
-  LUAError: "Lua errors",
-  EngineError: "Engine errors",
-  ModelError: "Model errors",
-  Script: "Non-eft-vanilla loaded scripts",
-  Warning: "Warnings",
-}
+const nconf = require("nconf")
+const sysHeader = nconf.get("sysHeader")
+const headers = nconf.get("pasteHeaders")
+
 function decorateTrace(trace){
   if (!Array.isArray(trace)) return trace;
   let ret = []

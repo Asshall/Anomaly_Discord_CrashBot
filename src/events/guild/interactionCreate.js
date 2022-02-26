@@ -1,3 +1,5 @@
+const nconf = require("nconf")
+
 module.exports = async interaction => {
 	if (!(interaction.isCommand() || interaction.isButton()) ) return;
 
@@ -11,6 +13,6 @@ module.exports = async interaction => {
 		await command.execute(interaction);
 	} catch (error) {
 		console.error(error);
-		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		await interaction.reply({ content: nconf.get("interErr"), ephemeral: true });
 	}
 }

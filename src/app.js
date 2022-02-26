@@ -14,6 +14,11 @@ nconf.env()
 	stringify: yaml.safeDump
 	}
   })
+  .file("strings",{ file: "strings.yml", format: {
+	parse: yaml.load,
+	stringify: yaml.safeDump
+	}
+  })
   .required(['token', 'guildId' ])
 // nconf.defaults({
 //   "crash-reply": "So..."

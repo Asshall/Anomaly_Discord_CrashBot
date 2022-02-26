@@ -1,5 +1,6 @@
 const moo = require("moo")
 const { vScripts } = require("./vanillaScripts.js")
+const nconf = require("nconf")
 
 // This needs refactoring so hard, all theses backslashes make the regex unreadable
 const errPre = "^! ?";
@@ -8,7 +9,7 @@ const repIden = " \\[\\d+\\]" // For repeated message, in the logs they appear l
 const nl = "\r\n"; // Windows carriage return before newline... Cause windows is "different"
 const traceIden = "~ -{72}"
 // c:\path!/aha-you_mad.script or ... script.name or ...script.name or ..\script.name
-const path = "(?:[a-z]:|\\\.{2,3} ?)(?:\\\\|\\/)?(?:[\\d\\w.! -]+[\\/\\\\]?)+" /* Fucken windows path */
+const path = "(?:[a-z]:|\\\.{2,3} ?)(?:\\\\|\\/)?(?:[\\d\\w\\.! -]+[\\/\\\\]?)+" /* Fucken windows path */
 
 const baseName = function(p){
   !p.match(path) ?? (p => { return p })();
@@ -109,13 +110,16 @@ lexer = moo.states({
 	},
   },
   trace: {
-	Path: {match: new RegExp(path),value: baseName},
+	Path: {
+	  match: new RegExp(path),
+	  value: baseName
+	},
 	Function: {
 	  match: new RegExp(`['<](?:[\\d\\w]+|${path})(?::\\d+)?['>]`),
 	  value: x => x.match("<") ? x.match(/\d+/)[0] : x.substr(1,x.length-2)
 	},
 	Linenum: linenum,
-	Ignore: "in function",
+	Ignore: /(?:in function|\[[A-Z]\]:[^\n]*\n)/,
 	EOT: {
 	  match: new RegExp(`${traceIden}(?!${repIden})`),
 	  pop: 1
@@ -157,16 +161,16 @@ const itrUntil = function(lexer, token, skip){
 }
 
 const grammar = {
-  CPU : {pdefault: "Couldn't parse the cpu info"},
-  GPU : {pdefault: "Couldn't parse the gpu info"},
-  Build : {pdefault: "Couldn't parse build info"},
-  Dx : {pdefault: "Couldn't parse DirectX info"},
-  Warning : {pdefault: "Couldn't parse this warning"},
-  ModelError : {pdefault: "Couldn't parse this model error"},
-  LUAError: {pdefault: "Couldn't parse this lua error"},
+  CPU : {pdefault: nconf.get("cpuParseErr")},
+  GPU : {pdefault: nconf.get("gpuParseErr")},
+  Build : {pdefault: nconf.get("buildParseErr")},
+  Dx : {pdefault: nconf.get("dxParseErr")},
+  Warning : {pdefault: nconf.get("warnParseErr")},
+  ModelError : {pdefault: nconf.get("merrorParseErr")},
+  LUAError: {pdefault: nconf.get("lerrorParseErr")},
   // This needs to be more efficient...
-  Script : {"pdefault": "No non-vanilla scripts", "precond" : s => !vScripts.includes(s.toLowerCase())},
-  Fatal : {pdefault: "Couldn't parse the fatal error", functor: l => {
+  Script : {"pdefault": nconf.get("scriptParseErr"), "precond" : s => !vScripts.includes(s.toLowerCase())},
+  Fatal : {pdefault: nconf.get("fatalParseErr"), functor: l => {
 
 	  const bufferFatal = itrUntil(l, "EOF", "Newline");
 	  let fatal = [];
@@ -182,7 +186,7 @@ const grammar = {
 	  return `${fatal.Function} : ${fatal.Expression} in file ${fatal.File} (${fatal.Line})\nDescription: ${fatal.Description}`;
 	}
   },
-  EngineError: {pdefault : "Couldn't parse this engine error", functor: l => {
+  EngineError: {pdefault : nconf.get("eerrorParseError"), functor: l => {
 
 	  const  bufferEngine = itrUntil(l, "Newline", "WS");
 	  const desc = bufferEngine[0];
@@ -191,14 +195,16 @@ const grammar = {
 	  return `${bufferEngine[1].value} in ${bufferEngine[0].value}`
 	}
   },
-  Traceback: {pdefault: "Couldn't parse this stack trace", functor: l => {
+  Traceback: {pdefault: nconf.get("stackParseErr"), functor: l => {
 
 	  const bufferStack = itrUntil(l,"EOT", "WS");
 	  let stack = [];
 	  const tokPerObj = 3;
 
 	  // This check will not always work... If the traceback is missing enough tokens, the length could still be a multiple of 3
-	  (bufferStack.length % tokPerObj != 0) && (() => { throw new Error("Traceback has missing tokens")})();
+	  if (bufferStack.length % tokPerObj != 0)
+		throw new Error("Traceback has missing tokens");
+
 	  for (let i=2; i < bufferStack.length; i+=tokPerObj){
 		stack.push({
 		  file: bufferStack[i-2].value,
@@ -213,12 +219,13 @@ const grammar = {
 	  }
 	  return ret;
   }},
-  LUAStack: {pdefault: "Couldn't parse this lua stack trace", functor: l => {
+  LUAStack: {pdefault: nconf.get("lstackParseErr"), functor: l => {
 	const bufferLua = itrUntil(l, "EOL",  ["Pre", "Level"]);
 	let stack = [];
 	const tokPerObj = 3;
 
-	(bufferLua.length % tokPerObj != 0) && (() => { throw new Error("Traceback has missing tokens")})();
+	if (bufferLua.length % tokPerObj != 0)
+	  throw new Error("LUATraceback has missing tokens");
 	for (let i=0; i < bufferLua.length; i+=tokPerObj){
 	  stack.push({
 		file: bufferLua[i],
@@ -237,10 +244,20 @@ const grammar = {
 }
 // For testing purposes
 // const fs = require("fs")
-// let file = fs.readFileSync("xray_sky.log", "utf8")
+// let file = fs.readFileSync("log", "utf8")
 // lexer.reset(file)
-// lexer.reset(`! error in stalker with visual actors\\stalker_neutral\\stalker_neutral_a.ogf [44]`)
+// lexer.reset(`~ ------------------------------------------------------------------------
+// ~ STACK TRACEBACK:
+//  
+//     g:/stalker efp/efp\\gamedata\\scripts\\_g.script (line: 2160) in function 'alife_release'
+//     g:/stalker efp/efp\\gamedata\\scripts\\haru_skills.script (line: 173) in function <g:/stalker efp/efp\\gamedata\\scripts\\haru_skills.script:168>
+//     [C]: in function 'iterate_inventory'
+//     g:/stalker efp/efp\\gamedata\\scripts\\haru_skills.script (line: 176) in function 'scavanger_effect'
+//     g:/stalker efp/efp\\gamedata\\scripts\\haru_skills.script (line: 145) in function 'f'
+//     g:/stalker efp/efp\\gamedata\\scripts\\_g.script (line: 370) in function 'functor_a'
+//     g:/stalker efp/efp\\gamedata\\scripts\\_g.script (line: 458) in function <g:/stalker efp/efp\\gamedata\\scripts\\_g.script:453>
+// ~ ------------------------------------------------------------------------`)
 // for (let t of lexer){ if(true
-  // t.type != "LexError"
+//   // t.type != "LexError"
 // ) {console.log(t)}}
 module.exports = { lexer, grammar }

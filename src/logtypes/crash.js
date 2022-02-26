@@ -1,11 +1,13 @@
 const Discord = require("discord.js");
 const JSP = require("jspaste");
-const { vanillaPaste, decorateTrace }  = require("../pastes/efp-vanilla.js");
 const nconf = require("nconf");
+
+const { vanillaPaste, decorateTrace }  = require("../pastes/efp-vanilla.js");
 let { lexer, grammar } = require("../lexers/efp-logs.js")
 const { getReportButton } = require("../utils.js")
+
+// Consts, found in /config.yml
 const fallbacks = nconf.get("fallbacks")
-const errorMessage = nconf.get("errorMessage")
 const vanillaBuild = nconf.get("vanillaBuild")
 const trunkIden = nconf.get("trunkIden") + '\n'
 const discordMaxLength =  nconf.get("discordMaxLength")
@@ -15,7 +17,7 @@ const systemDetailsDefaults = nconf.get("systemDetailsDefaults")
 const noProbCauseLines = nconf.get("noProbCauseLines")
 
 // For testing purposes
-const fs = require("fs")
+// const fs = require("fs")
 // fs.readdir("../lexers/logs", (err,files) => {
 //   if (err) {
 //     console.log( err)
@@ -38,9 +40,21 @@ async function genMessage (text, err) {
 	for (let k of Object.keys(systemDetailsDefaults))
 	  data[k] = getLast(data[k])?.value ?? systemDetailsDefaults[k];
 
-	const hardware = { name: "Hardware:", value: `__CPU__: ${data.CPU}\n__GPU__: ${data.GPU}`, inline: true };
-	const build = { name: "Build:", value: data.Build, inline: true };
-	const dx = { name: "DirectX version:", value: data.Dx, inline: true };
+	const hardware = {
+	  name: nconf.get("embedHardware"),
+	  value: `__CPU__: ${data.CPU}\n__GPU__: ${data.GPU}`,
+	  inline: true
+	};
+	const build = {
+	  name: nconf.get("embedBuild"),
+	  value: data.Build,
+	  inline: true
+	};
+	const dx = {
+	  name: nconf.get("embedDx"),
+	  value: data.Dx,
+	  inline: true
+	};
 
 	let fatal
 	if (!data.Fatal) {
@@ -75,11 +89,14 @@ async function genMessage (text, err) {
 		// // probCause = probCause.split("").reverse().join("");
 	  )();
 	  fatal = {
-		name: "No Fatal error, is this related ? :",
+		name: nconf.get("embedNoFatal"),
 		value: trunkIfNeeded(decorateTrace(probCause)) + '\n'
 	  };
   	} else {
-	  fatal = { name: "Fatal error:", value: `>>> ${data.Fatal[0].value}` };
+	  fatal = {
+		name: nconf.get("embedFatal"),
+		value: `>>> ${data.Fatal[0].value}`
+	  };
 	}
 	/* Lua stacktrace.
 	  Appears if the fatal error is lua related.
@@ -94,23 +111,31 @@ async function genMessage (text, err) {
 	if (data.LUAStack && data.LUAStack.value) {
 	  trace = getLast(data.LUAStack).value
 	  trace = trace.length == 1 ? [trace, getLast(data.Traceback)?.value].flat() : trace
-	  luastack = { name: "LUA Stack trace: ", value: trunkIfNeeded(decorateTrace(trace)) };
+	  luastack = {
+		name: nconf.get("embedLua"),
+		value: trunkIfNeeded(decorateTrace(trace))
+	  };
 	}
 
 	const pasteResponse = await JSP.publish(vanillaPaste(data));
-	const pasteUrl = { name: "For further investigating: ", value: pasteResponse.url }
+	const pasteUrl = {
+	  name: nconf.get("embedPaste"),
+	  value: pasteResponse.url
+	}
 
 	const embed = new Discord.MessageEmbed()
-	  .setColor('#0099ff')
-	  .setTitle("Crash report")
-	  .setFooter({ text: "This is a beta version of gimmelogs\nCode lives here: https://github.com/Asshall/Anomaly_Discord_CrashBot"})
+	  .setColor(nconf.get("embedColor"))
+	  .setTitle(nconf.get("embedTitle"))
+	  .setFooter({ text: nconf.get("embedFooter")})
 	embed.fields = [hardware, build, dx, fatal]
 	luastack && embed.addFields(new Object(luastack))
 	embed.addFields(new Object(pasteUrl))
 	return { content: nconf.get("crash-reply"), embeds: [embed], components: [getReportButton()]}
+
   } catch(e) {
+
 	console.error(e)
-	if (err) return e.stack
+	if (err) return e.stack ?? e.message
 	return { content: nconf.get("genErrorMessage"), components: [getReportButton()]}
 	}
 }
@@ -123,7 +148,7 @@ function getLast(obj){
 function trunkIfNeeded(v){
   // Could it be done in one step with regex ?
   if (v.length > maxLength) {
-	v = v.slice(-maxLength)
+	ret = v.slice(-maxLength)
 	v = trunkIden + ret.substr(ret.indexOf('\n') + 1)
   }
   return v
@@ -174,8 +199,7 @@ function parseCrashlog(crashlog) {
 		});
 	  }
 	} catch (e) {
-	  console.error(e.stack);
-	  throw new parsingException(`This token caused the following error ${token} =>\n${e.stack}`);
+	  throw new parsingException(`This token caused the following error: ${token} (${token.line}) =>\n${e.stack}`);
 	}
   }
 // console.log(ret)

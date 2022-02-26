@@ -1,0 +1,71 @@
+# logtypes/crash.js
+systemDetailsDefaults: # Defaults
+  CPU: No CPU info
+  GPU: No GPU info
+  Build: No build info
+  Dx: No DirectX info
+emptyLogMsg: Cmon man this log's empty
+embedHardware: "Hardware:"
+embedBuild: "Build:"
+embedDx: "DirectX version:"
+embedFatal: "Fatal Error:"
+embedNoFatal: "No Fatal error is this related ? :"
+embedLua: "LUA Stack trace:"
+embedPaste: "For further investigating:"
+embedFooter: "This is a beta version of gimmelogs\nCode lives here: https://github.com/Asshall/Anomaly_Discord_CrashBot"
+embedTitle: Crash report
+genErrorMessage: "Something wrong happened... Did you put black magic in that log ?" # When the response generation fails
+crash-reply: So... # The text in a sucessful bot response
+
+# commands/quoteanegoist.js
+qaeCmdDesc: Give you output from fortune anarchism
+
+# commands/report.js
+reportCmdDesc: Report a log that broke me
+# When reporting the original message is fetched in order to get back the attachment, this is displayed if it failed to fetch
+reportFailFetch: Couldn't find the log, it has to be in the @ last messages and have a log attached to it
+reportConfirmMsg: Your log have been reported sucessfully
+reportErrorMsg: Wow, something happened... Your log wasn't reported
+reportMsg: "reported this log:" # Message content when a log a sent on the report channel, prepended by the user who reported the log
+reportButtonClicked: This log has been reported # Text to be displayed on a clicked report button
+
+# event/guild/interactionCreate.js
+interErr: There was an error while executing this command!
+
+# lexers/efp-logs.js
+cpuParseErr: Couldn't parse the cpu info
+gpuParseErr: Couldn't parse the gpu info
+buildParseErr: Couldn't parse the build info
+dxParseErr: Couldn't parse Directx info
+warnParseErr: Couldn't parse this warning
+merrorParseErr: Couldn't parse this model error
+lerrorParseErr: Couldn't parse this lua error
+scriptParseErr: Couldn't parse this script loading
+fatalParseErr: Couldn't parse the fatal error
+eerrorParseErr: Couldn't parse this engine error
+stackParseErr: Couldn't parse this stacktrace
+lstackParseErr: Couldn't parse this lua stacktrace
+
+# pastes/efp-vanilla.js
+sysHeader: "--------[ Your system specifications ]--------"
+pasteTitle: "Summary of your crash:"
+pasteHeaders:
+  systemDetails: {
+    CPU: CPU,
+    GPU: GPU,
+    Build: Build,
+    Dx: Dx version,
+  }
+  Fatal: Fatal error
+  LUAStack: Lua fatal traceback
+  Traceback: Lua non fatal tracebacks
+  LUAError: Lua errors
+  EngineError: Engine errors
+  ModelError: Model errors
+  Script: Non-eft-vanilla loaded scripts
+  Warning: Warnings
+
+# util.js
+fetchErrMessage: "Couldn't get this log because:" # Error to display when an attachement can't be downloaded
+reportButtonText: Report an incorrect response # Text on the report button
+
