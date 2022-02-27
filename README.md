@@ -22,7 +22,9 @@ docker-compose -f compose-prod.yml -d up
 
 ## Configuring
 All strings are in `/src/strings.yml`
+
 All config are in `/src/config.yml`
+
 Script list (used to exclude vanilla script for the sumarry) is in `/src/lexers/vannillaScripts.js`, follow the instruction on the last line do decouple efp scripts
 
 ### Secrets
