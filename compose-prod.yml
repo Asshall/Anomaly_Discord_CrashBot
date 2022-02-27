@@ -1,8 +1,7 @@
 version: "3.7"
 services:
   bot:
-    build: .
-    image: efp-bot
+    image: asshall/anomaly-discord-crashbot:arm64
     container_name: prod-efp
     restart: unless-stopped
 

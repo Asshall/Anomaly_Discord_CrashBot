@@ -2,14 +2,16 @@ version: "3.7"
 services:
   dev-bot:
     build: .
-    image: efp-bot:latest_dev
+    image: anomaly-discord-crashbot:dev
     container_name: dev-efp
     volumes:
-    - ./src:/src
-    environment:
+    - ./src:/src # Overrides src added on image build
+    environment: # Overrides config.json with .env
     - token=${token}
     - clientId=${clientId}
-      #entrypoint: /bin/bash
+      #stdin_open: true # -i
+      #tty: true # -t
+    entrypoint: ["/bin/bash"] # Overrides CMD ["npm"], ["start"]
     restart: unless-stopped
 
 
