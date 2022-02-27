@@ -1,0 +1,16 @@
+logExtensions: [txt, log] # The extension to consider as log files
+messageAsResponse: true # Should the bot reply or just send a message
+vanillaBuild: "build 8028" # What is considered the vanilla build
+trunkIden: ... # Character do be displayed when a field in the response embed is too long
+discordMaxLength: 1024
+phoneMaxLength: 512 # This is the max size of a embed field (usefull when displayed on phones). It overrides the discord default max length
+# When no fatal error is found in a log, the bot will try to find the last tokens from this list
+fallbacks:
+- Traceback
+- EngineError
+- LUAError
+embedColor: "#0099ff"
+noProbCauseLines: 5 #If no fallback token are found how many line from the end of the log to display
+fetchDepthLimit: 10
+noAdvertiseCommands:
+- report

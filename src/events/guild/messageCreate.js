@@ -1,12 +1,9 @@
-const Discord = require("discord.js");
-const { MessageActionRow, MessageButton } = require('discord.js');
 const fs = require("fs");
-const fetch = require('node-fetch');
-const nconf = require('nconf');
+const { getLogs } = require("../../utils.js");
+const { genMessage } = require(`../../logtypes/crash.js`)
+const nconf = require("nconf")
 
 module.exports = async (message, bot) => {
-  // for testing pruposes
-  if (message.channelId != "886698565315989524") return;
 
   if(message.author.bot) return;
   if(message.channel.type === "dm") return;
@@ -14,30 +11,23 @@ module.exports = async (message, bot) => {
   // If the bot gets pinged
   const content = message.content
   if (content.match(`<@!${nconf.get("clientId")}`)) {
-		//require(`../.././pings/${content.split(' ')[1]}`)						
-		message.reply({content:"Stop pinging me ffs <:angerycat:864618091874353172>"})
+	const responses = require("../../pings/basic.js")
+	const reply = responses[Math.floor(Math.random() * responses.length)];
+	message.reply({content: reply})
+  } else if (content.match(/anarchis(?:me?|te?)/)) {
+	message.reply({content: "You better not be saying anything bad <:realsquid:910247033468764220>"})
   }
-				
-	// For logs
-  const file = message.attachments.first();
-  if (!file || !file.name.includes(".log")) return;
-  try {
-    const response = await fetch(file.url);
-    if (!response.ok)
-      return message.channel.send(
-        "Couldn\'t get your log cause:",
-        response.statusText,
-      );
-    const text = await response.text();
-    if (text) {
-			// For full logs
-      if(text.includes("FATAL ERROR")){
-        require(`../.././logtypes/crash.js`)(bot, text, message);
-      }else {
-        require(`../.././logtypes/notcrash.js`)(bot, text, message);
-      }
-    }
-  } catch (error) {
-    console.log(error);
+
+  const logs = await getLogs(message)
+  for (let i=0; i < logs.length; i++) {
+	const msg = await genMessage(logs[i]);
+	if (nconf.get("messageAsResponse")) {
+	  message.reply(msg)
+	} else {
+	  message.channel.send(msg)
+	}
+	/* Temporary fix to only respond to the first log
+	  cause it breaks the report function...*/
+	break;
   }
 }
