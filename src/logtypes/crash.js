@@ -135,7 +135,7 @@ async function genMessage (text, err) {
   } catch(e) {
 
 	console.error(e)
-	if (err) return e.stack ?? e.message
+	if (err) return e.toString()
 	return { content: nconf.get("genErrorMessage") + text.title, components: [getReportButton()]}
 	}
 }
@@ -171,7 +171,7 @@ class parsingException {
 	this.message = message;
   }
 
-  static toString() {
+  toString() {
 	return `parsing error:\n${this.message}`
   }
 }

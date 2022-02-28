@@ -65,8 +65,8 @@ const mainState = {
 	value: x => baseName(x.replace(new RegExp(errPre), '').replace(new RegExp(repIden), '')),
   },
   EngineError: {
-	match: new RegExp(`${errPre}ERROR:?`),
-	push: "engine"
+	match: new RegExp(`${errPre}ERROR:? .*`),
+	value: x => baseName(x.replace(new RegExp(errPre), '').replace(new RegExp(repIden), '')),
   },
   ModelError: {
 	match: new RegExp(`${errPre}error.*`),
@@ -185,18 +185,19 @@ const grammar = {
 	}
 	if (fatal.Description == "fatal error")
 	  fatal.Description = undefined
-	
+
 	return `${fatal.Function} : ${fatal.Expression} in file ${fatal.File} (${fatal.Line})\nDescription: ${fatal.Description ?? fatal.Arguments ?? "No Description"}`;
 	}
   },
-  EngineError: {pdefault : nconf.get("eerrorParseError"), functor: l => {
-
-	  const  bufferEngine = itrUntil(l, "Newline", "WS");
-	  const desc = bufferEngine[0];
-	  const fun = bufferEngine[1];
-	  !fun && (() => {return desc})();
-	  return `${bufferEngine[1].value} in ${bufferEngine[0].value}`
-	}
+  EngineError: {pdefault : nconf.get("eerrorParseError"),
+	// functor: l => {
+    //
+	//   const  bufferEngine = itrUntil(l, "Newline", "WS");
+	//   const desc = bufferEngine[0];
+	//   const fun = bufferEngine[1];
+	//   !fun && (() => {return desc})();
+	//   return `${bufferEngine[1].value} in ${bufferEngine[0].value}`
+	// }
   },
   Traceback: {pdefault: nconf.get("stackParseErr"), functor: l => {
 

@@ -17,9 +17,9 @@ module.exports = async (message, bot) => {
   } else if (content.match(/anarchis(?:me?|te?)/)) {
 	message.reply({content: "You better not be saying anything bad <:realsquid:910247033468764220>"})
   }
-
-  const logs = await getLogs(message) ?? (() => { return })();
-  for (let i=0; i < logs.length; i++) {
+  if (!message.attachments.size) return;
+  const logs = await getLogs(message)
+  for (let i=0; i < logs?.length; i++) {
 	const msg = await genMessage(logs[i]);
 	if (nconf.get("messageAsResponse")) {
 	  message.reply(msg)

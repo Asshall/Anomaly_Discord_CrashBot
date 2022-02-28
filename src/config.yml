@@ -11,6 +11,5 @@ fallbacks:
 - LUAError
 embedColor: "#0099ff"
 noProbCauseLines: 5 #If no fallback token are found how many line from the end of the log to display
-fetchDepthLimit: 10
 noAdvertiseCommands:
 - report

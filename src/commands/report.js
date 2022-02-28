@@ -27,12 +27,16 @@ module.exports = {
 	if (!culprit)
 	  throw new Error("Reported log couldn't be found");
 
+	const log = {
+	  content: await fetchAttachment(culprit),
+	  title: culprit.name
+	}
 	// Had to wrap the throw into a lambda cause is was throwing a syntax error...
 	const reportChannel = await client.channels.fetch(nconf.get("reportChannelId")) ?? (() => {throw new Error("Couldn't find the report channel")})();
 
 	const embeds = interaction.message.embeds;
 	const mdCodeBlock = "\`".repeat(3)
-	const error = !embeds.length ? `${mdCodeBlock}${await genMessage(await fetchAttachment(culprit), true)}${mdCodeBlock}` : ''
+	const error = !embeds.length ? `${mdCodeBlock}${await genMessage(log, true)}${mdCodeBlock}` : ''
 	reportChannel.send({
 	  content: `${user.toString()} ${nconf.get("reportMsg")}${error}`,
 	  embeds,

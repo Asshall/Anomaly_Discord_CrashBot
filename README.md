@@ -18,7 +18,6 @@ docker-compose -p your_network_name -f compose-dev.yml run dev-bot
 
 # Starting the prod container
 docker-compose -f compose-prod.yml -d up
-docker cp src/secrets.json ${container_name}:/src
 ```
 
 ## Configuring
