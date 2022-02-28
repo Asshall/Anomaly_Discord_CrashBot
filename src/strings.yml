@@ -14,8 +14,8 @@ embedLua: "LUA Stack trace:"
 embedPaste: "For further investigating:"
 embedFooter: "This is a beta version of gimmelogs\nCode lives here: https://github.com/Asshall/Anomaly_Discord_CrashBot"
 embedTitle: Crash report
-genErrorMessage: "Something wrong happened... Did you put black magic in that log ?" # When the response generation fails
-crash-reply: So... # The text in a sucessful bot response
+genErrorMessage: "Something wrong happened... This log hurts me : " # When the response generation fails
+crash-reply: "So... Crash report for : " # The text in a sucessful bot response
 
 # commands/quoteanegoist.js
 qaeCmdDesc: Give you output from fortune anarchism

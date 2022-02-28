@@ -10,40 +10,34 @@ module.exports = {
 	.setDescription(nconf.get("reportCmdDesc")),
   async execute(interaction) {
 	/* If the bot response is an actual response you can actually report a bug for the person who actually send the first log */
-	const user = nconf.get("messageAsResponse") ? interaction.message.mentions.repliedUser : interaction.user;
-	const messages = await interaction.channel.messages.fetch({limit: nconf.get("fetchDepthLimit")});
+	const user = interaction.user;
+	const message = await interaction.channel.messages.fetch(interaction.message.reference.messageId)
+	  ?? (() => { throw new Error("Referenced message was not found") });
+	const logName = interaction.message.content.split(':')[1].trim()
 
-	let culprit
-	let logs = []
-	// Get the last message of the user that has a log as attachement
-	for (const i of messages) {
-	  const currMsg = i[1]; // First el is message id
-	  const attachments = currMsg.attachments;
-	  (currMsg.author.id == user.id) && attachments.map
-		(a => isLog(a) && logs.push(a));
-		if (logs.length) {
-		  culprit = currMsg; break;
-		}
+	let culprit;
+	for (let id of message.attachments){
+	  const att = id[1]
+	  if (att.name == logName) {
+		culprit = att;
+		break;
+	  }
 	}
-	if (!culprit){
-	  await interaction.reply({ content: nconf.get("reportFailFetch").replace("@", nconf.get("fetchDepthLimit")), ephemeral: true });
-		throw new Error("Reported log couldn't be found");
-	}
+
+	if (!culprit)
+	  throw new Error("Reported log couldn't be found");
+
 	// Had to wrap the throw into a lambda cause is was throwing a syntax error...
 	const reportChannel = await client.channels.fetch(nconf.get("reportChannelId")) ?? (() => {throw new Error("Couldn't find the report channel")})();
-		
+
 	const embeds = interaction.message.embeds;
-	for (let i=0; i < logs.length; i++) {
-	  const mdCodeBlock = "\`".repeat(3)
-	  const error = !embeds.length ? `${mdCodeBlock}${await genMessage(await fetchAttachment(logs[i]), true)}${mdCodeBlock}` : ''
-	  reportChannel.send({
-		content: `${user.toString()} ${nconf.get("reportMsg")}${error}`,
-		embeds,
-		files: [logs[i]]
-	  });
-	  // Temporary fix... See events/guild/messageCreate.js
-	  break;
-	}
+	const mdCodeBlock = "\`".repeat(3)
+	const error = !embeds.length ? `${mdCodeBlock}${await genMessage(await fetchAttachment(culprit), true)}${mdCodeBlock}` : ''
+	reportChannel.send({
+	  content: `${user.toString()} ${nconf.get("reportMsg")}${error}`,
+	  embeds,
+	  files: [culprit]
+	});
 	interaction.update({content: nconf.get("reportButtonClicked"), components: []})
   },
 };

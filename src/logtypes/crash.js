@@ -31,12 +31,12 @@ const noProbCauseLines = nconf.get("noProbCauseLines")
 // })
 
 async function genMessage (text, err) {
-  if (!text)
+  if (!text.content)
 	return { content: nconf.get("emptyLogMsg") }
   // Why doesn't this work...
   // text ?? (() => {return { content: nconf.get("emptyLogMsg") }})();
   try {
-	const data = parseCrashlog(text);
+	const data = parseCrashlog(text.content);
 	for (let k of Object.keys(systemDetailsDefaults))
 	  data[k] = getLast(data[k])?.value ?? systemDetailsDefaults[k];
 
@@ -64,7 +64,7 @@ async function genMessage (text, err) {
 		for (let i = currTok.length-1; i>=0; i--)
 		  if (currTok[i]?.value && currTok[i]?.line !== undefined)
 			return currTok[i]
-	  }).sort((a,b) => b.line - a.line)[0]?.value ?? (() => text.match(new RegExp(`(?:[^\n]*\n){${noProbCauseLines}}$`, 'g'))[0]
+	  }).sort((a,b) => b.line - a.line)[0]?.value ?? (() => text.content.match(new RegExp(`(?:[^\n]*\n){${noProbCauseLines}}$`, 'g'))[0]
 		// let currCharN = text.length-1;
 		// let line = 0;
 		// let probCause = "";
@@ -130,13 +130,13 @@ async function genMessage (text, err) {
 	embed.fields = [hardware, build, dx, fatal]
 	luastack && embed.addFields(new Object(luastack))
 	embed.addFields(new Object(pasteUrl))
-	return { content: nconf.get("crash-reply"), embeds: [embed], components: [getReportButton()]}
+	return { content: nconf.get("crash-reply") + text.title, embeds: [embed], components: [getReportButton()]}
 
   } catch(e) {
 
 	console.error(e)
 	if (err) return e.stack ?? e.message
-	return { content: nconf.get("genErrorMessage"), components: [getReportButton()]}
+	return { content: nconf.get("genErrorMessage") + text.title, components: [getReportButton()]}
 	}
 }
 

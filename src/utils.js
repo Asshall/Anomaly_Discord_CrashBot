@@ -8,6 +8,7 @@ function isLog(attachment) {
 	if (!attachment || !nconf.get("logExtensions").includes(s[s.length-1])) return false;
 	return true
 }
+
 async function fetchAttachment(attachment) {
   try {
 	const response = await fetch(attachment.url);
@@ -26,13 +27,16 @@ async function fetchAttachment(attachment) {
 
 async function getLogs(message) {
   const files = message.attachments;
-  const ret = []
+  const ret = [];
   for (let file of files){
-	file = file[1]
+	file = file[1];
 	if (!isLog(file)) return;
-	ret.push(await fetchAttachment(file))
+	ret.push({
+	  content: await fetchAttachment(file),
+	  title: file.name
+	});
   }
-  return ret
+  return ret;
 }
 
 function getReportButton() {

@@ -172,18 +172,21 @@ const grammar = {
   Script : {"pdefault": nconf.get("scriptParseErr"), "precond" : s => !vScripts.includes(s.toLowerCase())},
   Fatal : {pdefault: nconf.get("fatalParseErr"), functor: l => {
 
-	  const bufferFatal = itrUntil(l, "EOF", "Newline");
-	  let fatal = [];
-	  for (let i=1; i < bufferFatal.length; i+=2){
-		fatal[bufferFatal[i-1].value] = bufferFatal[i].value;
-	  }
-	  if (fatal.Function == "CScriptEngine::lua_error") {
-		args = baseName(fatal?.Arguments) ?? (() => { throw new Error("Fatal lua error arguments couldn't be parsed") })();
-		// Not always the same format...
-		// return `LUA Error: \"${args[2].trim()}\" in file ${args[0].trim()} line ${args[1].trim()}`;
-		return args
-	  }
-	  return `${fatal.Function} : ${fatal.Expression} in file ${fatal.File} (${fatal.Line})\nDescription: ${fatal.Description}`;
+	const bufferFatal = itrUntil(l, "EOF", "Newline");
+	let fatal = [];
+	for (let i=1; i < bufferFatal.length; i+=2){
+	  fatal[bufferFatal[i-1].value] = bufferFatal[i].value;
+	}
+	if (fatal.Function == "CScriptEngine::lua_error") {
+	  args = baseName(fatal?.Arguments) ?? (() => { throw new Error("Fatal lua error arguments couldn't be parsed") })();
+	  // Not always the same format...
+	  // return `LUA Error: \"${args[2].trim()}\" in file ${args[0].trim()} line ${args[1].trim()}`;
+	  return args
+	}
+	if (fatal.Description == "fatal error")
+	  fatal.Description = undefined
+	
+	return `${fatal.Function} : ${fatal.Expression} in file ${fatal.File} (${fatal.Line})\nDescription: ${fatal.Description ?? fatal.Arguments ?? "No Description"}`;
 	}
   },
   EngineError: {pdefault : nconf.get("eerrorParseError"), functor: l => {
