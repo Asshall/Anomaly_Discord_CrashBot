@@ -15,9 +15,10 @@ logs in mind. Never tested with vanilla logs
 ```bash
 # Starting the dev container
 docker-compose -p your_network_name -f compose-dev.yml run dev-bot
+npm dev
 
 # Starting the prod container
-docker-compose -f compose-prod.yml -d up
+docker-compose -f compose-prod.yml up -d
 ```
 
 ## Configuring

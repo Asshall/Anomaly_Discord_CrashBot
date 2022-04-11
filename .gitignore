@@ -2,5 +2,6 @@ src/secrets.json
 src/node_modules
 src/package-lock.json
 src/.npm
+logs
 .env
 com

@@ -1,10 +1,11 @@
 version: "3.7"
 services:
   bot:
-    image: asshall/anomaly-discord-crashbot
+    image: asshall/anomaly-discord-crashbot:latest
     container_name: prod-efp
     volumes:
     - ./src/secrets.json:/src/secrets.json # Copies secrets in
+    - ./logs:/logs
     restart: unless-stopped
 
 
